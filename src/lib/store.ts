@@ -105,17 +105,45 @@ export const customPromptStore = {
   },
 };
 
-// --- Branding (logo, couleur, nom du cabinet) ---
-const DEFAULT_BRANDING: Branding = {
+// --- Branding (identite du prestataire + mentions legales) ---
+export const DEFAULT_BRANDING: Branding = {
   cabinet: "Formator AI",
   couleur: "#2563eb",
   logoDataUrl: null,
+  formeJuridique: "Auto-entrepreneur",
+  adresse: "",
+  codePostalVille: "",
+  telephone: "",
+  email: "",
+  siret: "",
+  rcsRm: "",
+  tvaIntra: "",
+  iban: "",
+  franchiseTVA: true,
+  tvaRate: 20,
+  validiteJours: 90,
+  conditionsReglement:
+    "Acompte de 30 % à la commande, solde à réception de facture sous 30 jours. Règlement par virement bancaire.",
 };
 
 export const brandingStore = {
-  get: (): Branding => read<Branding>(KEYS.branding, DEFAULT_BRANDING),
+  get: (): Branding => ({ ...DEFAULT_BRANDING, ...read<Partial<Branding>>(KEYS.branding, {}) }),
   set: (b: Branding): Branding => {
     write(KEYS.branding, b);
     return b;
   },
 };
+
+// Numero de devis sequentiel : DEV-AAAA-NNNN
+export function nextDevisNumero(): string {
+  const year = new Date().getFullYear();
+  const all = devisStore.all();
+  const prefix = `DEV-${year}-`;
+  const max = all
+    .map((d) => d.numero)
+    .filter((n) => n?.startsWith(prefix))
+    .map((n) => parseInt(n.slice(prefix.length), 10))
+    .filter((n) => !isNaN(n))
+    .reduce((m, n) => Math.max(m, n), 0);
+  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+}

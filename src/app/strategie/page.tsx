@@ -2,7 +2,8 @@
 
 import { Download, Check, Globe, Star, Users, ShieldCheck, Crown } from "lucide-react";
 import { PageHeader } from "@/components/ui";
-import { brandingStore, devisStore, uid } from "@/lib/store";
+import { brandingStore, devisStore } from "@/lib/store";
+import { createDevis, defaultLigne } from "@/lib/devis";
 import { pdfDevis } from "@/lib/pdf";
 import {
   PHASE_DECOUVERTE,
@@ -16,34 +17,36 @@ import {
 import type { Devis } from "@/lib/types";
 
 export default function StrategiePage() {
-  function devisEssai(o: OffreEssai) {
-    const d: Devis = {
-      id: uid(),
-      entreprise: "[Nom du client]",
-      prix: o.type === "payante" ? 450 : 0,
+  async function devisEssai(o: OffreEssai) {
+    const b = brandingStore.get();
+    const d: Devis = createDevis(b, {
       duree: o.duree,
-      nbParticipants: 1,
-      conditions: `Phase de decouverte - ${o.titre}. ${o.description}`,
-      date: new Date().toISOString().slice(0, 10),
-      createdAt: new Date().toISOString(),
-    };
+      lignes: [
+        defaultLigne({
+          designation: `Phase de découverte — ${o.titre} (${o.duree})`,
+          prixUnitaireHT: o.type === "payante" ? 450 : 0,
+        }),
+      ],
+      conditions: `${o.description} ${b.conditionsReglement}`,
+    });
     devisStore.save(d);
-    pdfDevis(d, brandingStore.get());
+    await pdfDevis(d, b);
   }
 
-  function devisContrat(o: OffreContrat) {
-    const d: Devis = {
-      id: uid(),
-      entreprise: "[Nom du client]",
-      prix: 1200,
+  async function devisContrat(o: OffreContrat) {
+    const b = brandingStore.get();
+    const d: Devis = createDevis(b, {
       duree: o.engagement,
-      nbParticipants: 1,
-      conditions: `${o.titre} - Engagement : ${o.engagement}. ${o.description}`,
-      date: new Date().toISOString().slice(0, 10),
-      createdAt: new Date().toISOString(),
-    };
+      lignes: [
+        defaultLigne({
+          designation: `${o.titre} — engagement ${o.engagement}`,
+          prixUnitaireHT: 1200,
+        }),
+      ],
+      conditions: `${o.description} ${b.conditionsReglement}`,
+    });
     devisStore.save(d);
-    pdfDevis(d, brandingStore.get());
+    await pdfDevis(d, b);
   }
 
   return (

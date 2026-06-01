@@ -114,15 +114,47 @@ export interface PromptItem {
 }
 
 // --- Devis ---
+export interface DevisLigne {
+  designation: string;
+  quantite: number;
+  unite: string; // jour, heure, forfait, participant...
+  prixUnitaireHT: number;
+}
+
 export interface Devis {
   id: string;
-  entreprise: string;
-  prix: number;
+  numero: string; // ex: DEV-2026-0001
+  entreprise: string; // raison sociale du client
+  clientAdresse: string;
+  clientContact: string;
+  date: string; // date d'emission
+  validiteJours: number; // duree de validite de l'offre
+  dateExecution: string; // date prevue de la prestation
+  lieuExecution: string;
   duree: string;
   nbParticipants: number;
+  lignes: DevisLigne[];
+  tvaRate: number; // taux de TVA en %
+  franchiseTVA: boolean; // true => TVA non applicable art. 293 B CGI
+  acompte: number; // pourcentage d'acompte a la commande
   conditions: string;
-  date: string;
   createdAt: string;
+}
+
+// Totaux calcules d'un devis
+export interface DevisTotaux {
+  totalHT: number;
+  montantTVA: number;
+  totalTTC: number;
+  montantAcompte: number;
+}
+
+export function calcDevis(d: Devis): DevisTotaux {
+  const totalHT = d.lignes.reduce((s, l) => s + l.quantite * l.prixUnitaireHT, 0);
+  const montantTVA = d.franchiseTVA ? 0 : totalHT * (d.tvaRate / 100);
+  const totalTTC = totalHT + montantTVA;
+  const montantAcompte = totalTTC * ((d.acompte || 0) / 100);
+  return { totalHT, montantTVA, totalTTC, montantAcompte };
 }
 
 // --- Base de connaissances ---
@@ -142,9 +174,24 @@ export interface KnowledgeEntry {
   devis?: Devis;
 }
 
-// --- Branding / export PDF ---
+// --- Branding / identite du prestataire (export PDF & mentions legales) ---
 export interface Branding {
-  cabinet: string;
+  cabinet: string; // raison sociale / nom commercial
   couleur: string; // hex
   logoDataUrl: string | null;
+  // Coordonnees et mentions legales du prestataire
+  formeJuridique: string; // ex: Auto-entrepreneur, SARL, SAS...
+  adresse: string;
+  codePostalVille: string;
+  telephone: string;
+  email: string;
+  siret: string;
+  rcsRm: string; // RCS ou RM + ville
+  tvaIntra: string; // n° de TVA intracommunautaire
+  iban: string; // optionnel, pour le reglement
+  // Parametres de facturation par defaut
+  franchiseTVA: boolean; // franchise en base de TVA (auto-entrepreneur)
+  tvaRate: number; // taux de TVA par defaut (%)
+  validiteJours: number; // duree de validite des devis (jours)
+  conditionsReglement: string;
 }

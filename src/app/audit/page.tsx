@@ -58,9 +58,9 @@ export default function AuditPage() {
     setSaved(true);
   }
 
-  function exportPdf() {
+  async function exportPdf() {
     if (!result) return;
-    pdfAudit(result, {
+    await pdfAudit(result, {
       client: input.entreprise,
       secteur: input.secteur,
       branding: brandingStore.get(),

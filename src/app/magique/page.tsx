@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { PageHeader, Field, ProviderBadge } from "@/components/ui";
 import { knowledgeStore, devisStore, brandingStore, uid } from "@/lib/store";
+import { createDevis, defaultLigne } from "@/lib/devis";
 import { pdfAudit, pdfFormation, pdfExercices, pdfDevis, pdfAttestation } from "@/lib/pdf";
 import type { AuditResult, Devis, Exercice, FormationResult, Niveau } from "@/lib/types";
 
@@ -36,6 +37,7 @@ export default function MagiquePage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
+  const [devisObj, setDevisObj] = useState<Devis | null>(null);
   const [saved, setSaved] = useState(false);
 
   async function generate(e: React.FormEvent) {
@@ -54,6 +56,20 @@ export default function MagiquePage() {
       });
       const data = await res.json();
       setResult(data);
+      // Construit le devis associe (numerote, pre-rempli)
+      setDevisObj(
+        createDevis(brandingStore.get(), {
+          entreprise,
+          duree: "1 journée (7h)",
+          nbParticipants: 6,
+          lignes: [
+            defaultLigne({
+              designation: `Formation IA personnalisée — ${entreprise} (${secteur})`,
+              prixUnitaireHT: prix,
+            }),
+          ],
+        }),
+      );
       setStep(STEPS.length);
     } finally {
       clearInterval(timer);
@@ -63,17 +79,6 @@ export default function MagiquePage() {
 
   const branding = () => brandingStore.get();
   const meta = () => ({ client: entreprise, secteur, branding: branding() });
-  const devis = (): Devis => ({
-    id: uid(),
-    entreprise,
-    prix,
-    duree: "1 journee (7h)",
-    nbParticipants: 6,
-    conditions:
-      "Reglement a 30 jours. Formation realisable en presentiel ou distanciel. Support, exercices et attestation inclus.",
-    date: new Date().toISOString().slice(0, 10),
-    createdAt: new Date().toISOString(),
-  });
 
   function saveAll() {
     if (!result) return;
@@ -87,7 +92,7 @@ export default function MagiquePage() {
       titre: `Audit IA - ${entreprise}`, createdAt: new Date().toISOString(),
       audit: result.audit,
     });
-    devisStore.save(devis());
+    if (devisObj) devisStore.save(devisObj);
     setSaved(true);
   }
 
@@ -179,8 +184,8 @@ export default function MagiquePage() {
               desc={`${result.exercices.length} exercices avec corriges`}
               onExport={() => pdfExercices(result.exercices, meta())} />
             <ExportCard icon={FileText} title="Devis"
-              desc={`${prix.toLocaleString("fr-FR")} EUR`}
-              onExport={() => pdfDevis(devis(), branding())} />
+              desc={devisObj ? `${devisObj.numero}` : `${prix} €`}
+              onExport={() => devisObj && pdfDevis(devisObj, branding())} />
             <ExportCard icon={Award} title="Attestation"
               desc="Attestation de formation"
               onExport={() => pdfAttestation({ ...meta(), intitule: result.formation.titre, duree: "1 journee (7h)" })} />
