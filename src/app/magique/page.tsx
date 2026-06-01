@@ -11,11 +11,13 @@ import {
   ListChecks,
   FileText,
   Award,
+  Presentation as PresentationIcon,
 } from "lucide-react";
 import { PageHeader, Field, ProviderBadge } from "@/components/ui";
 import { knowledgeStore, devisStore, brandingStore, uid } from "@/lib/store";
 import { createDevis, defaultLigne } from "@/lib/devis";
-import { pdfAudit, pdfFormation, pdfExercices, pdfDevis, pdfAttestation } from "@/lib/pdf";
+import { pdfAudit, pdfFormation, pdfExercices, pdfDevis, pdfAttestation, pdfSlides } from "@/lib/pdf";
+import Presentation from "@/components/Presentation";
 import type { AuditResult, Devis, Exercice, FormationResult, Niveau } from "@/lib/types";
 
 const NIVEAUX: Niveau[] = ["Debutant", "Intermediaire", "Avance"];
@@ -39,6 +41,7 @@ export default function MagiquePage() {
   const [result, setResult] = useState<Result | null>(null);
   const [devisObj, setDevisObj] = useState<Devis | null>(null);
   const [saved, setSaved] = useState(false);
+  const [presenting, setPresenting] = useState(false);
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -168,9 +171,14 @@ export default function MagiquePage() {
               </span>
               <ProviderBadge provider={result.provider} />
             </div>
-            <button className="btn-primary" onClick={saveAll}>
-              <Save className="h-4 w-4" /> {saved ? "Tout enregistre" : "Tout enregistrer"}
-            </button>
+            <div className="flex gap-2">
+              <button className="btn-ghost" onClick={() => setPresenting(true)}>
+                <PresentationIcon className="h-4 w-4" /> Présenter
+              </button>
+              <button className="btn-primary" onClick={saveAll}>
+                <Save className="h-4 w-4" /> {saved ? "Tout enregistre" : "Tout enregistrer"}
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -180,6 +188,9 @@ export default function MagiquePage() {
             <ExportCard icon={GraduationCap} title="Support de formation"
               desc={`${result.formation.modules.length} modules personnalises`}
               onExport={() => pdfFormation(result.formation, meta())} />
+            <ExportCard icon={PresentationIcon} title="Diapositives 16:9"
+              desc="Support à projeter en session"
+              onExport={() => pdfSlides(result.formation, meta())} />
             <ExportCard icon={ListChecks} title="Exercices"
               desc={`${result.exercices.length} exercices avec corriges`}
               onExport={() => pdfExercices(result.exercices, meta())} />
@@ -204,6 +215,16 @@ export default function MagiquePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {presenting && result && (
+        <Presentation
+          formation={result.formation}
+          client={entreprise}
+          secteur={secteur}
+          branding={brandingStore.get()}
+          onClose={() => setPresenting(false)}
+        />
       )}
     </div>
   );

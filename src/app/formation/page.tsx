@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { GraduationCap, Download, Save, Wand2, ListChecks } from "lucide-react";
+import { GraduationCap, Download, Save, Wand2, ListChecks, Presentation as PresentationIcon } from "lucide-react";
 import { PageHeader, Field, Spinner, ProviderBadge } from "@/components/ui";
 import { knowledgeStore, brandingStore, uid } from "@/lib/store";
-import { pdfFormation, pdfExercices } from "@/lib/pdf";
+import { pdfFormation, pdfExercices, pdfSlides } from "@/lib/pdf";
+import Presentation from "@/components/Presentation";
 import type { Exercice, FormationInput, FormationResult, Niveau } from "@/lib/types";
 
 const NIVEAUX: Niveau[] = ["Debutant", "Intermediaire", "Avance"];
@@ -25,6 +26,7 @@ export default function FormationPage() {
   const [loading, setLoading] = useState(false);
   const [loadingEx, setLoadingEx] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [presenting, setPresenting] = useState(false);
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -140,9 +142,15 @@ export default function FormationPage() {
                 <h2 className="text-lg font-semibold">{formation.titre}</h2>
                 <ProviderBadge provider={provider} />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button className="btn-ghost" onClick={save}>
                   <Save className="h-4 w-4" /> {saved ? "Enregistre" : "Enregistrer"}
+                </button>
+                <button className="btn-primary" onClick={() => setPresenting(true)}>
+                  <PresentationIcon className="h-4 w-4" /> Mode présentation
+                </button>
+                <button className="btn-ghost" onClick={() => pdfSlides(formation, meta())}>
+                  <Download className="h-4 w-4" /> Diapositives PDF
                 </button>
                 <button className="btn-dark" onClick={() => pdfFormation(formation, meta())}>
                   <Download className="h-4 w-4" /> Support PDF
@@ -226,6 +234,16 @@ export default function FormationPage() {
           <GraduationCap className="mb-3 h-8 w-8" />
           <p className="font-medium text-zinc-600">Votre formation apparaitra ici</p>
         </div>
+      )}
+
+      {presenting && formation && (
+        <Presentation
+          formation={formation}
+          client={input.entreprise}
+          secteur={input.secteur}
+          branding={brandingStore.get()}
+          onClose={() => setPresenting(false)}
+        />
       )}
     </div>
   );

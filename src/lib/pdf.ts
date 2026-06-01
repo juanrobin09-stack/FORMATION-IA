@@ -18,6 +18,7 @@ import {
   type Exercice,
   type FormationResult,
 } from "./types";
+import { buildDeck, type DeckSlide } from "./deck";
 
 // --- Police embarquee (chargee une fois, mise en cache) ---
 const FONT_REGULAR = "/fonts/LiberationSans-Regular.ttf";
@@ -37,12 +38,19 @@ async function loadBase64(url: string): Promise<string> {
   return btoa(binary);
 }
 
-async function newDoc(): Promise<jsPDF> {
+async function newDoc(opts?: {
+  orientation?: "portrait" | "landscape";
+  format?: string | number[];
+}): Promise<jsPDF> {
   if (!cache) {
     const [regular, bold] = await Promise.all([loadBase64(FONT_REGULAR), loadBase64(FONT_BOLD)]);
     cache = { regular, bold };
   }
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = new jsPDF({
+    unit: "mm",
+    orientation: opts?.orientation ?? "portrait",
+    format: opts?.format ?? "a4",
+  });
   doc.addFileToVFS("LiberationSans-Regular.ttf", cache.regular);
   doc.addFont("LiberationSans-Regular.ttf", "Liberation", "normal");
   doc.addFileToVFS("LiberationSans-Bold.ttf", cache.bold);
@@ -559,3 +567,160 @@ export async function pdfDevis(devis: Devis, b: Branding) {
 
   doc.save(`devis-${devis.numero || slug(devis.entreprise)}.pdf`);
 }
+
+// ===========================================================================
+// DIAPOSITIVES 16:9 (support a projeter en session de formation)
+// ===========================================================================
+
+export async function pdfSlides(formation: FormationResult, meta: { client: string; secteur?: string; branding: Branding }) {
+  const b = meta.branding;
+  const deck = buildDeck(formation, { client: meta.client, secteur: meta.secteur, cabinet: b.cabinet });
+  // Format 16:9 (paysage)
+  const doc = await newDoc({ orientation: "landscape", format: [297, 167] });
+  const W = 297;
+  const H = 167;
+  const M = 18;
+  const [ar, ag, ab] = hexToRgb(b.couleur);
+
+  const T = (s: string, x: number, y: number, opt?: { align?: "left" | "right" | "center"; size?: number; bold?: boolean; color?: [number, number, number] }) => {
+    doc.setFont("Liberation", opt?.bold ? "bold" : "normal");
+    doc.setFontSize(opt?.size ?? 14);
+    const c = opt?.color ?? [30, 30, 30];
+    doc.setTextColor(c[0], c[1], c[2]);
+    doc.text(clean(s), x, y, { align: opt?.align ?? "left" });
+  };
+  // IMPORTANT : fixer la taille/graisse AVANT de mesurer le retour a la ligne,
+  // sinon splitTextToSize calcule la largeur avec la mauvaise police.
+  const wrap = (s: string, w: number, size = 14, bold = false) => {
+    doc.setFont("Liberation", bold ? "bold" : "normal");
+    doc.setFontSize(size);
+    return doc.splitTextToSize(clean(s), w) as string[];
+  };
+
+  deck.forEach((slide, idx) => {
+    if (idx > 0) doc.addPage([297, 167], "landscape");
+
+    if (slide.kind === "cover") {
+      doc.setFillColor(ar, ag, ab);
+      doc.rect(0, 0, W, H, "F");
+      if (b.logoDataUrl) {
+        try {
+          doc.addImage(b.logoDataUrl, "PNG", M, M, 22, 22);
+        } catch {
+          /* ignore */
+        }
+      }
+      T(b.cabinet.toUpperCase(), W - M, M + 8, { align: "right", size: 12, bold: true, color: [255, 255, 255] });
+      const titleLines = wrap(slide.title, W - 2 * M, 28, true);
+      let ty = H / 2 - (titleLines.length - 1) * 6 - 6;
+      titleLines.forEach((l) => {
+        T(l, M, ty, { size: 28, bold: true, color: [255, 255, 255] });
+        ty += 12;
+      });
+      T(slide.subtitle, M, ty + 4, { size: 14, color: [255, 255, 255] });
+      T(`${slide.client}${slide.secteur ? "  •  " + slide.secteur : ""}   —   ${new Date().toLocaleDateString("fr-FR")}`, M, H - M, { size: 11, color: [255, 255, 255] });
+      return;
+    }
+
+    if (slide.kind === "agenda") {
+      slideHeader("Programme");
+      const top = 42;
+      const gap = Math.min(13, (H - top - 16) / Math.max(slide.items.length, 1));
+      const sz = gap < 10 ? 12 : 15;
+      let yy = top + gap / 2;
+      slide.items.forEach((it) => {
+        doc.setFillColor(ar, ag, ab);
+        doc.circle(M + 2, yy - 1.6, 1.5, "F");
+        T(it, M + 9, yy, { size: sz, color: [40, 40, 40] });
+        yy += gap;
+      });
+      footerSlide(idx);
+      return;
+    }
+
+    if (slide.kind === "section") {
+      doc.setFillColor(ar, ag, ab);
+      doc.rect(0, 0, W, H, "F");
+      T(`MODULE ${slide.index} / ${slide.total}`, M, 46, { size: 14, bold: true, color: [255, 255, 255] });
+      const tl = wrap(slide.title, W - 2 * M, 26, true);
+      let ty = 70;
+      tl.forEach((l) => {
+        T(l, M, ty, { size: 26, bold: true, color: [255, 255, 255] });
+        ty += 11;
+      });
+      wrap(slide.objectif, W - 2 * M, 13).forEach((l) => {
+        T(l, M, ty + 2, { size: 13, color: [255, 255, 255] });
+        ty += 7;
+      });
+      return;
+    }
+
+    if (slide.kind === "content") {
+      slideHeader(`Module ${slide.moduleIndex} — ${slide.moduleTitre}`);
+      // Titre de la diapo
+      let yy = 40;
+      wrap(slide.title, W - 2 * M, 22, true).forEach((l) => {
+        T(l, M, yy, { size: 22, bold: true, color: [25, 25, 25] });
+        yy += 9.5;
+      });
+      yy += 4;
+      // Puces
+      slide.points.forEach((p) => {
+        const lines = wrap(p, W - 2 * M - 8, 13);
+        doc.setFillColor(ar, ag, ab);
+        doc.circle(M + 2, yy - 1.6, 1.5, "F");
+        lines.forEach((l) => {
+          T(l, M + 8, yy, { size: 13, color: [50, 50, 50] });
+          yy += 6.6;
+        });
+        yy += 1.5;
+      });
+      // Callouts exemple / conseil en bas
+      let cy = H - 16;
+      if (slide.conseils) {
+        const cl = wrap(`Conseil : ${slide.conseils}`, W - 2 * M - 6, 10.5);
+        cy -= cl.length * 5;
+        cl.forEach((l, i) => T(l, M, cy + 4 + i * 5, { size: 10.5, color: [120, 120, 120] }));
+      }
+      if (slide.exemple) {
+        const exLines = wrap(slide.exemple, W - 2 * M - 34, 10.5);
+        const boxH = exLines.length * 5 + 8;
+        const boxY = (slide.conseils ? cy - boxH - 4 : H - 16 - boxH);
+        if (boxY > yy) {
+          doc.setFillColor(245, 247, 252);
+          doc.roundedRect(M, boxY, W - 2 * M, boxH, 2, 2, "F");
+          T("EXEMPLE", M + 5, boxY + 6, { size: 8.5, bold: true, color: [ar, ag, ab] });
+          exLines.forEach((l, i) => T(l, M + 32, boxY + 6 + i * 5, { size: 10.5, color: [60, 60, 60] }));
+        }
+      }
+      footerSlide(idx);
+      return;
+    }
+
+    if (slide.kind === "closing") {
+      doc.setFillColor(ar, ag, ab);
+      doc.rect(0, 0, W, H, "F");
+      T(slide.title, M, 60, { size: 34, bold: true, color: [255, 255, 255] });
+      wrap(slide.text, W - 2 * M, 13).forEach((l, i) => T(l, M, 78 + i * 7, { size: 13, color: [255, 255, 255] }));
+      T(slide.cabinet, M, H - M, { size: 12, bold: true, color: [255, 255, 255] });
+      return;
+    }
+  });
+
+  function slideHeader(label: string) {
+    doc.setFillColor(ar, ag, ab);
+    doc.rect(0, 0, W, 4, "F");
+    T(label, M, 18, { size: 11, bold: true, color: [ar, ag, ab] });
+    doc.setDrawColor(235, 235, 235);
+    doc.setLineWidth(0.3);
+    doc.line(M, 22, W - M, 22);
+  }
+  function footerSlide(i: number) {
+    T(b.cabinet, M, H - 7, { size: 8.5, color: [170, 170, 170] });
+    T(`${i + 1} / ${deck.length}`, W - M, H - 7, { size: 8.5, align: "right", color: [170, 170, 170] });
+  }
+
+  doc.save(`diapositives-${slug(meta.client)}.pdf`);
+}
+
+export type { DeckSlide };
