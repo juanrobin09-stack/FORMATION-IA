@@ -12,12 +12,14 @@ import {
   Database,
   Sparkles,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/magique", label: "Formation complete", icon: Sparkles, highlight: true },
   { href: "/crm", label: "CRM", icon: Users },
+  { href: "/strategie", label: "Strategie commerciale", icon: TrendingUp },
   { href: "/audit", label: "Audit IA", icon: ClipboardCheck },
   { href: "/formation", label: "Generateur", icon: GraduationCap },
   { href: "/bibliotheque", label: "Bibliotheque", icon: Library },
