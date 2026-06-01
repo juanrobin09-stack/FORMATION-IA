@@ -12,7 +12,8 @@ import { mockAudit, mockExercices, mockFormation } from "@/lib/mocks";
 import type { AuditResult, Exercice, FormationResult, Niveau } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// 60 s = limite du plan Vercel Hobby. Les 3 generations tournent en parallele.
+export const maxDuration = 60;
 
 interface Body {
   entreprise: string;

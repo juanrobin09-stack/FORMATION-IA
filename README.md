@@ -26,6 +26,27 @@ npm run dev
 
 Ouvrez http://localhost:3000.
 
+## Déploiement sur Vercel
+
+Le projet est prêt pour Vercel (zéro configuration, Next.js détecté automatiquement).
+
+1. Sur [vercel.com](https://vercel.com), **Add New → Project** puis importez le dépôt
+   GitHub `juanrobin09-stack/FORMATION-IA`.
+2. **Framework** : Next.js (auto). **Build** : `next build` (auto). Rien à changer.
+3. Onglet **Environment Variables**, ajoutez (au moins une clé IA) :
+
+   | Variable | Exemple |
+   |----------|---------|
+   | `ANTHROPIC_API_KEY` | `sk-ant-...` |
+   | `OPENAI_API_KEY` | `sk-...` (repli, optionnel) |
+   | `ANTHROPIC_MODEL` | `claude-sonnet-4-6` (optionnel) |
+   | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (optionnel) |
+
+4. **Deploy**. Chaque `git push` redéploie automatiquement.
+
+> Sans clé IA, l'app se déploie et fonctionne quand même (mode démo).
+> La route « formation complète » est calibrée à 60 s (limite du plan Hobby).
+
 ## Modules
 
 | Module | Description |
