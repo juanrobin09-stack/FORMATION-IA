@@ -31,7 +31,7 @@ export function mockAudit(input: {
       description: `Cas d'usage prioritaire pour le secteur ${input.secteur} : ${c}.`,
     })),
     priorites: [
-      `Former les equipes aux fondamentaux de ChatGPT (${input.secteur})`,
+      `Former les equipes aux fondamentaux des outils d'IA (ChatGPT, Claude, Gemini, Copilot) pour le ${input.secteur}`,
       `Automatiser : ${cas[0]}`,
       `Deployer une bibliotheque de prompts metier`,
     ],
@@ -78,25 +78,43 @@ export function mockFormation(input: {
       ],
     },
     {
-      titre: "Decouvrir ChatGPT",
-      objectif: "Prendre en main l'outil et l'art du prompt",
+      titre: "Panorama des outils d'IA",
+      objectif: "Decouvrir l'ecosysteme complet des outils d'IA, au-dela de ChatGPT",
       slides: [
         slide(
-          "Premiers pas avec ChatGPT",
-          "Interface, conversations, et structure d'un bon prompt (contexte, role, objectif, format).",
-          `Exemple : "Agis comme un expert ${input.secteur} et redige..."`,
+          "Les assistants conversationnels",
+          "ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Copilot (Microsoft) et Le Chat (Mistral AI) : forces, differences et quand utiliser chacun.",
+          `Comparer une meme demande metier (${input.secteur}) sur ChatGPT, Claude et Gemini.`,
+          "Aucun outil n'est meilleur partout : on choisit selon la tache.",
+        ),
+        slide(
+          "Au-dela du texte : image, recherche, voix, video",
+          "Recherche sourcee (Perplexity), images (Midjourney, DALL·E, Adobe Firefly), voix (ElevenLabs), video (HeyGen, Synthesia), slides (Gamma).",
+          `Generer un visuel promotionnel pour ${input.entreprise} avec Midjourney ou Firefly.`,
+          "Associez les outils : texte + image + voix pour un livrable complet.",
+        ),
+      ],
+    },
+    {
+      titre: "L'art du prompt",
+      objectif: "Formuler des demandes efficaces sur n'importe quel outil d'IA",
+      slides: [
+        slide(
+          "Structurer un bon prompt",
+          "La methode role + contexte + tache + format fonctionne sur tous les assistants (ChatGPT, Claude, Gemini, Copilot).",
+          `Exemple : "Agis comme un expert ${input.secteur} et redige..." teste sur deux outils differents.`,
           "Un bon prompt = role + contexte + tache + format attendu.",
         ),
       ],
     },
     {
       titre: "Cas d'usage metier",
-      objectif: `Appliquer l'IA aux situations reelles du ${input.secteur}`,
-      slides: cas.map((c) =>
+      objectif: `Appliquer l'IA aux situations reelles du ${input.secteur}, avec le bon outil`,
+      slides: cas.map((c, i) =>
         slide(
           capitalize(c),
-          `Comment utiliser l'IA pour ${c}.`,
-          `Demonstration en direct : ${c} pour ${input.entreprise}.`,
+          `Comment utiliser l'IA pour ${c}. Outil recommande : ${recommandeOutil(i)}.`,
+          `Demonstration en direct : ${c} pour ${input.entreprise} avec ${recommandeOutil(i)}.`,
           "Adaptez toujours le ton a votre clientele.",
         ),
       ),
@@ -107,8 +125,8 @@ export function mockFormation(input: {
       slides: [
         slide(
           "Automatiser sans coder",
-          "Connecter l'IA a vos outils (emails, documents, reseaux sociaux).",
-          `Exemple : automatiser ${cas[0]} pour ${input.entreprise}.`,
+          "Connecter l'IA a vos outils avec Make, Zapier ou Copilot (emails, documents, reseaux sociaux).",
+          `Exemple : automatiser ${cas[0]} pour ${input.entreprise} via Make + l'IA.`,
           "Commencez petit, mesurez le gain, puis etendez.",
         ),
       ],
@@ -178,8 +196,8 @@ export function mockExercices(input: {
     const t = themes[i % themes.length];
     base.push({
       titre: `Exercice ${i + 1} : ${capitalize(t)}`,
-      consigne: `En utilisant ChatGPT, realisez ${t} dans le contexte du secteur ${input.secteur}. Soignez le contexte fourni a l'IA et iterez sur le resultat.`,
-      corrige: `Corrige modele : un bon prompt commence par definir le role ("Agis comme un expert ${input.secteur}"), le contexte, la tache (${t}) et le format attendu. Le resultat doit ensuite etre relu et ajuste au ton de l'entreprise.`,
+      consigne: `Avec ${recommandeOutil(i)} (ou l'outil d'IA de votre choix), realisez ${t} dans le contexte du secteur ${input.secteur}. Soignez le contexte fourni a l'IA et iterez sur le resultat.`,
+      corrige: `Corrige modele : un bon prompt commence par definir le role ("Agis comme un expert ${input.secteur}"), le contexte, la tache (${t}) et le format attendu, quel que soit l'outil (${recommandeOutil(i)}, ChatGPT, Claude, Gemini...). Le resultat doit ensuite etre relu et ajuste au ton de l'entreprise.`,
     });
   }
   return base;
@@ -187,4 +205,10 @@ export function mockExercices(input: {
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Recommande un outil d'IA different selon l'usage, pour ne pas se limiter a ChatGPT.
+const OUTILS_RECO = ["ChatGPT", "Claude", "Gemini", "Copilot", "Perplexity", "Midjourney"];
+function recommandeOutil(i: number): string {
+  return OUTILS_RECO[i % OUTILS_RECO.length];
 }

@@ -13,6 +13,7 @@ import {
   Sparkles,
   Settings,
   TrendingUp,
+  Boxes,
 } from "lucide-react";
 
 const NAV = [
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/strategie", label: "Strategie commerciale", icon: TrendingUp },
   { href: "/audit", label: "Audit IA", icon: ClipboardCheck },
   { href: "/formation", label: "Generateur", icon: GraduationCap },
+  { href: "/outils", label: "Outils IA", icon: Boxes },
   { href: "/bibliotheque", label: "Bibliotheque", icon: Library },
   { href: "/devis", label: "Devis", icon: FileText },
   { href: "/base-connaissances", label: "Connaissances", icon: Database },
