@@ -29,6 +29,15 @@ export function activeProvider(): AIProvider | null {
   return null;
 }
 
+// Extrait une clé propre même si l'utilisateur a collé du texte autour
+// (commande curl, guillemets, espaces, retours à la ligne).
+function cleanKey(raw?: string): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim().replace(/^["']|["']$/g, "");
+  const m = trimmed.match(/sk-[A-Za-z0-9_-]{20,}/);
+  return m ? m[0] : trimmed;
+}
+
 /**
  * Genere une reponse JSON a partir d'un system prompt + user prompt.
  * Renvoie un objet deja parse. Leve une erreur si aucune cle n'est
@@ -42,7 +51,7 @@ export async function generateJSON<T>(
   if (!provider) throw new NoAIKeyError();
 
   if (provider === "anthropic") {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = new Anthropic({ apiKey: cleanKey(process.env.ANTHROPIC_API_KEY) });
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: 4096,
@@ -58,7 +67,7 @@ export async function generateJSON<T>(
   }
 
   // OpenAI
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const client = new OpenAI({ apiKey: cleanKey(process.env.OPENAI_API_KEY) });
   const res = await client.chat.completions.create({
     model: OPENAI_MODEL,
     response_format: { type: "json_object" },
