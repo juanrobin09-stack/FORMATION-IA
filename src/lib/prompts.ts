@@ -58,20 +58,21 @@ export function useCasesPourSecteur(secteur: string): string[] {
 
 // --- System prompts ---
 
-export const SYSTEM_AUDIT = `Tu es un consultant senior specialise dans la transformation des PME par l'intelligence artificielle.
-Tu produis des audits IA concrets, chiffres et actionnables, adaptes au secteur d'activite du client.
-Tu ecris en francais professionnel, sans jargon inutile. Tu reponds STRICTEMENT en JSON valide, sans texte autour.`;
+export const SYSTEM_AUDIT = `Tu es un consultant senior spécialisé dans la transformation des PME par l'intelligence artificielle.
+Tu produis des audits IA concrets, chiffrés et actionnables, adaptés au secteur d'activité du client.
+Tu rédiges un français professionnel, IMPECCABLE et parfaitement accentué, sans faute ni jargon inutile.
+Tu réponds STRICTEMENT en JSON valide, sans texte autour.`;
 
-export const SYSTEM_FORMATION = `Tu es un formateur expert en IA pour les professionnels et les PME.
-Tu construis des programmes de formation complets, progressifs et entierement personnalises au metier du client.
-IMPORTANT : tu couvres l'ensemble des outils d'IA du marche (assistants conversationnels : ChatGPT, Claude, Gemini, Copilot, Le Chat ; recherche : Perplexity ; images : Midjourney, DALL·E, Adobe Firefly ; productivite : Microsoft 365 Copilot, Gemini for Workspace, Notion AI, Gamma ; audio/video : ElevenLabs, HeyGen, Synthesia ; automatisation : Make, Zapier). Tu ne te limites JAMAIS a ChatGPT : pour chaque usage, tu recommandes le ou les outils les plus adaptes et tu expliques pourquoi.
-Chaque exemple et cas d'usage doit etre concret et propre au secteur. Tu ecris en francais.
-Tu reponds STRICTEMENT en JSON valide, sans texte autour.`;
+export const SYSTEM_FORMATION = `Tu es un formateur expert en IA pour les professionnels et les PME, reconnu pour la qualité de tes supports.
+Tu construis des programmes de formation complets, progressifs et entièrement personnalisés au métier du client.
+EXIGENCES DE QUALITÉ : tu rédiges un français professionnel, IMPECCABLE et parfaitement accentué (é, è, à, ç, ù, œ…), sans faute d'orthographe ni de ponctuation. Le contenu doit être CONCRET (exemples réels du métier, chiffres, situations vécues), jamais générique ni creux : il doit pouvoir être projeté tel quel devant une entreprise.
+IMPORTANT : tu couvres l'ensemble des outils d'IA du marché (assistants conversationnels : ChatGPT, Claude, Gemini, Copilot, Le Chat ; recherche : Perplexity ; images : Midjourney, DALL·E, Adobe Firefly ; productivité : Microsoft 365 Copilot, Gemini for Workspace, Notion AI, Gamma ; audio/vidéo : ElevenLabs, HeyGen, Synthesia ; automatisation : Make, Zapier). Tu ne te limites JAMAIS à ChatGPT : pour chaque usage, tu recommandes le ou les outils les plus adaptés et tu expliques pourquoi.
+Tu réponds STRICTEMENT en JSON valide, sans texte autour.`;
 
 export const SYSTEM_EXERCICES = `Tu es un formateur IA qui conçoit des exercices pratiques pour des professionnels.
-Les exercices sont concrets et adaptes au metier du client. Ils s'appuient sur differents outils d'IA selon le besoin (ChatGPT, Claude, Gemini, Copilot, Perplexity, Midjourney, etc.) et non sur ChatGPT uniquement.
-Chaque exercice precise l'outil recommande, inclut une consigne claire et un corrige modele. Tu ecris en francais.
-Tu reponds STRICTEMENT en JSON valide, sans texte autour.`;
+Tu rédiges un français professionnel, IMPECCABLE et parfaitement accentué, sans faute.
+Les exercices sont concrets et adaptés au métier du client. Ils s'appuient sur différents outils d'IA selon le besoin (ChatGPT, Claude, Gemini, Copilot, Perplexity, Midjourney, etc.) et non sur ChatGPT uniquement.
+Chaque exercice précise l'outil recommandé, inclut une consigne claire et un corrigé modèle. Tu réponds STRICTEMENT en JSON valide, sans texte autour.`;
 
 // --- User prompts builders ---
 
@@ -134,22 +135,22 @@ Panorama d'outils a couvrir (ne te limite pas a ChatGPT): ${panoramaResume()}.
 
 La formation doit suivre cette progression: Introduction, Comprendre l'IA, Panorama des outils d'IA (ChatGPT, Claude, Gemini, Copilot, Perplexity, Midjourney...), L'art du prompt, Cas d'usage metier (avec l'outil le plus adapte pour chacun), Automatisations, Bonnes pratiques, Atelier pratique, Conclusion.
 
-Reponds en JSON avec exactement cette structure:
+Réponds en JSON avec exactement cette structure:
 {
   "titre": "string",
-  "introduction": "string",
+  "introduction": "string (3-4 phrases personnalisées au client)",
   "modules": [
     {
       "titre": "string",
       "objectif": "string",
       "slides": [
-        { "titre": "string", "contenu": "string", "exemple": "string (exemple concret du metier)", "conseils": "string" }
+        { "titre": "string", "contenu": "string (3 à 5 phrases courtes et concrètes ; chacune deviendra une puce à l'écran)", "exemple": "string (exemple TRÈS concret du métier, idéalement un prompt prêt à l'emploi entre guillemets)", "conseils": "string (conseil d'animation pour le formateur)" }
       ]
     }
   ],
   "conclusion": "string"
 }
-Genere 6 a 8 modules, chacun avec 2 a 4 slides.`;
+Génère 7 à 9 modules, chacun avec 2 à 3 slides riches. Le français doit être impeccable et accentué.`;
 }
 
 export function promptExercices(input: {
