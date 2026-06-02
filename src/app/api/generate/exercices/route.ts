@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateJSON } from "@/lib/ai";
+import { aiError } from "@/lib/apiError";
 import { SYSTEM_EXERCICES, promptExercices } from "@/lib/prompts";
-import { mockExercices } from "@/lib/mocks";
 import type { Exercice, Niveau } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -18,14 +18,17 @@ export async function POST(req: Request) {
   if (!input?.entreprise || !input?.secteur) {
     return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
   }
-  const { data, provider } = await generateJSON<{ exercices: Exercice[] }>(
-    SYSTEM_EXERCICES,
-    promptExercices({
-      entreprise: input.entreprise,
-      secteur: input.secteur,
-      niveau: input.niveau,
-    }),
-    () => ({ exercices: mockExercices({ secteur: input.secteur }) }),
-  );
-  return NextResponse.json({ result: data.exercices ?? [], provider });
+  try {
+    const { data, provider } = await generateJSON<{ exercices: Exercice[] }>(
+      SYSTEM_EXERCICES,
+      promptExercices({
+        entreprise: input.entreprise,
+        secteur: input.secteur,
+        niveau: input.niveau,
+      }),
+    );
+    return NextResponse.json({ result: data.exercices ?? [], provider });
+  } catch (err) {
+    return aiError(err);
+  }
 }

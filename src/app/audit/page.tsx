@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ClipboardCheck, Download, Save, Wand2 } from "lucide-react";
-import { PageHeader, Field, Spinner, ProviderBadge } from "@/components/ui";
+import { PageHeader, Field, Spinner, ProviderBadge, ErrorBanner } from "@/components/ui";
 import { knowledgeStore, brandingStore, uid } from "@/lib/store";
 import { pdfAudit } from "@/lib/pdf";
 import type { AuditInput, AuditResult, Niveau } from "@/lib/types";
@@ -24,12 +24,14 @@ export default function AuditPage() {
   const [provider, setProvider] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string>();
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setResult(null);
     setSaved(false);
+    setError(undefined);
     try {
       const res = await fetch("/api/generate/audit", {
         method: "POST",
@@ -37,8 +39,14 @@ export default function AuditPage() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "La génération a échoué.");
+        return;
+      }
       setResult(data.result);
       setProvider(data.provider);
+    } catch {
+      setError("Impossible de contacter le service de génération. Réessayez.");
     } finally {
       setLoading(false);
     }
@@ -76,6 +84,8 @@ export default function AuditPage() {
         title="Audit IA"
         subtitle="Questionnaire intelligent pour diagnostiquer les opportunites IA d'un client."
       />
+
+      {error && <ErrorBanner message={error} />}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <form onSubmit={generate} className="card space-y-4 p-6">

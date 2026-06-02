@@ -67,14 +67,23 @@ export function Spinner({ label }: { label?: string }) {
   );
 }
 
+export function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="mb-5 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <svg className="mt-0.5 h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>{message}</span>
+    </div>
+  );
+}
+
 export function ProviderBadge({ provider }: { provider?: string }) {
   if (!provider) return null;
-  const demo = provider === "mock";
+  const labels: Record<string, string> = { anthropic: "Claude (Anthropic)", openai: "OpenAI" };
   return (
-    <span
-      className={`badge ${demo ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}
-    >
-      {demo ? "Mode demo (sans cle IA)" : `Genere par ${provider}`}
+    <span className="badge bg-emerald-50 text-emerald-700">
+      Généré par {labels[provider] ?? provider}
     </span>
   );
 }

@@ -12,9 +12,9 @@ Formator AI fait passer la preparation d'une formation IA de **4-8 heures** a **
 - **jsPDF** — export PDF professionnel cote client
 - **Supabase** — persistance serveur optionnelle (chemin de production)
 
-> L'application fonctionne **sans aucune cle API** grace a un mode demo qui genere
-> un contenu coherent et personnalise au metier. Ajoutez une cle Anthropic ou
-> OpenAI pour activer la generation IA reelle.
+> **Une cle IA est requise** pour la generation : renseignez `ANTHROPIC_API_KEY`
+> (Claude, prioritaire) ou `OPENAI_API_KEY` (repli) dans `.env.local`. Sans cle,
+> l'application affiche un message invitant a la configurer (aucun contenu simule).
 
 ## Demarrage
 
@@ -44,8 +44,9 @@ Le projet est prêt pour Vercel (zéro configuration, Next.js détecté automati
 
 4. **Deploy**. Chaque `git push` redéploie automatiquement.
 
-> Sans clé IA, l'app se déploie et fonctionne quand même (mode démo).
-> La route « formation complète » est calibrée à 60 s (limite du plan Hobby).
+> Une clé IA est requise : pensez à renseigner `ANTHROPIC_API_KEY` (ou `OPENAI_API_KEY`)
+> dans les variables d'environnement Vercel. La route « formation complète » est
+> calibrée à 60 s (limite du plan Hobby).
 
 ## Modules
 
@@ -86,7 +87,6 @@ src/
   lib/
     ai.ts            # Anthropic + OpenAI + repli mock
     prompts.ts       # system prompts + personnalisation metier
-    mocks.ts         # generateurs de contenu demo
     pdf.ts           # generation PDF (jsPDF)
     store.ts         # persistance (localStorage en V1)
     supabase.ts      # client + schema SQL (production)

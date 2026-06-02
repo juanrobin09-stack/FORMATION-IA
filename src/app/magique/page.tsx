@@ -13,7 +13,7 @@ import {
   Award,
   Presentation as PresentationIcon,
 } from "lucide-react";
-import { PageHeader, Field, ProviderBadge } from "@/components/ui";
+import { PageHeader, Field, ProviderBadge, ErrorBanner } from "@/components/ui";
 import { knowledgeStore, devisStore, brandingStore, uid } from "@/lib/store";
 import { createDevis, defaultLigne } from "@/lib/devis";
 import { pdfAudit, pdfFormation, pdfExercices, pdfDevis, pdfAttestation, pdfSlides } from "@/lib/pdf";
@@ -42,12 +42,14 @@ export default function MagiquePage() {
   const [devisObj, setDevisObj] = useState<Devis | null>(null);
   const [saved, setSaved] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [error, setError] = useState<string>();
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setResult(null);
     setSaved(false);
+    setError(undefined);
     setStep(0);
     // Animation de progression pendant l'appel reel
     const timer = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 700);
@@ -58,6 +60,10 @@ export default function MagiquePage() {
         body: JSON.stringify({ entreprise, secteur, objectifs, niveau }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "La génération a échoué.");
+        return;
+      }
       setResult(data);
       // Construit le devis associe (numerote, pre-rempli)
       setDevisObj(
@@ -74,6 +80,8 @@ export default function MagiquePage() {
         }),
       );
       setStep(STEPS.length);
+    } catch {
+      setError("Impossible de contacter le service de génération. Réessayez.");
     } finally {
       clearInterval(timer);
       setLoading(false);
@@ -105,6 +113,8 @@ export default function MagiquePage() {
         title="Creer une formation complete"
         subtitle="Audit, programme, support, exercices, prompts et devis - generes en une seule fois."
       />
+
+      {error && <ErrorBanner message={error} />}
 
       <form onSubmit={generate} className="card mb-6 p-6">
         <div className="mb-4 flex items-center gap-2 text-sm font-medium text-ink">

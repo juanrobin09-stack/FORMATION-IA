@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { GraduationCap, Download, Save, Wand2, ListChecks, Presentation as PresentationIcon } from "lucide-react";
-import { PageHeader, Field, Spinner, ProviderBadge } from "@/components/ui";
+import { PageHeader, Field, Spinner, ProviderBadge, ErrorBanner } from "@/components/ui";
 import { knowledgeStore, brandingStore, uid } from "@/lib/store";
 import { pdfFormation, pdfExercices, pdfSlides } from "@/lib/pdf";
 import Presentation from "@/components/Presentation";
@@ -27,6 +27,7 @@ export default function FormationPage() {
   const [loadingEx, setLoadingEx] = useState(false);
   const [saved, setSaved] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [error, setError] = useState<string>();
 
   async function generate(e: React.FormEvent) {
     e.preventDefault();
@@ -34,6 +35,7 @@ export default function FormationPage() {
     setFormation(null);
     setExercices([]);
     setSaved(false);
+    setError(undefined);
     try {
       const res = await fetch("/api/generate/formation", {
         method: "POST",
@@ -41,8 +43,14 @@ export default function FormationPage() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "La génération a échoué.");
+        return;
+      }
       setFormation(data.result);
       setProvider(data.provider);
+    } catch {
+      setError("Impossible de contacter le service de génération. Réessayez.");
     } finally {
       setLoading(false);
     }
@@ -50,6 +58,7 @@ export default function FormationPage() {
 
   async function generateExercices() {
     setLoadingEx(true);
+    setError(undefined);
     try {
       const res = await fetch("/api/generate/exercices", {
         method: "POST",
@@ -61,7 +70,13 @@ export default function FormationPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "La génération des exercices a échoué.");
+        return;
+      }
       setExercices(data.result);
+    } catch {
+      setError("Impossible de contacter le service de génération. Réessayez.");
     } finally {
       setLoadingEx(false);
     }
@@ -91,6 +106,8 @@ export default function FormationPage() {
         title="Generateur de formation"
         subtitle="Programme, support de slides et exercices entierement personnalises au metier."
       />
+
+      {error && <ErrorBanner message={error} />}
 
       <form onSubmit={generate} className="card mb-6 grid gap-4 p-6 md:grid-cols-3">
         <Field label="Entreprise">
