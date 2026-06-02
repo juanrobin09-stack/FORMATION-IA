@@ -1,10 +1,87 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Upload, Palette } from "lucide-react";
+import { Check, Upload, Palette, Zap, AlertCircle, Loader2 } from "lucide-react";
 import { PageHeader, Field } from "@/components/ui";
 import { brandingStore, DEFAULT_BRANDING } from "@/lib/store";
 import type { Branding } from "@/lib/types";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Claude (Anthropic)",
+  openai: "OpenAI",
+};
+
+function AIStatusCard() {
+  const [status, setStatus] = useState<{ provider: string | null; model: string | null }>();
+  const [test, setTest] = useState<"idle" | "loading" | "ok" | "error" | "no_key">("idle");
+  const [testMsg, setTestMsg] = useState<string>();
+
+  useEffect(() => {
+    fetch("/api/ai-status")
+      .then((r) => r.json())
+      .then(setStatus)
+      .catch(() => setStatus({ provider: null, model: null }));
+  }, []);
+
+  async function runTest() {
+    setTest("loading");
+    setTestMsg(undefined);
+    try {
+      const r = await fetch("/api/ai-status?test=1");
+      const d = await r.json();
+      setTest(d.test);
+      setTestMsg(d.message);
+    } catch {
+      setTest("error");
+      setTestMsg("Impossible de contacter le serveur.");
+    }
+  }
+
+  const connected = status?.provider;
+
+  return (
+    <div className="card p-6">
+      <h3 className="mb-4 text-sm font-semibold text-zinc-700">Connexion IA</h3>
+      {!status ? (
+        <div className="flex items-center gap-2 text-sm text-zinc-400">
+          <Loader2 className="h-4 w-4 animate-spin" /> Vérification…
+        </div>
+      ) : connected ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="badge bg-emerald-50 text-emerald-700">
+            <Check className="mr-1 h-3.5 w-3.5" /> Clé détectée
+          </span>
+          <span className="text-sm text-zinc-600">
+            {PROVIDER_LABELS[status.provider!] ?? status.provider} · <span className="text-zinc-400">{status.model}</span>
+          </span>
+          <button onClick={runTest} className="btn-ghost ml-auto" disabled={test === "loading"}>
+            {test === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            Tester la connexion
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 text-sm text-amber-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Aucune clé IA détectée. Ajoutez <code className="rounded bg-zinc-100 px-1">ANTHROPIC_API_KEY</code> dans vos
+            variables d'environnement, puis redémarrez (ou redéployez) l'application.
+          </span>
+        </div>
+      )}
+
+      {test === "ok" && (
+        <p className="mt-3 flex items-center gap-2 text-sm text-emerald-700">
+          <Check className="h-4 w-4" /> Connexion réussie : l'IA répond correctement.
+        </p>
+      )}
+      {test === "error" && (
+        <p className="mt-3 flex items-start gap-2 text-sm text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> Échec : {testMsg || "la clé semble invalide."}
+        </p>
+      )}
+    </div>
+  );
+}
 
 const PRESETS = ["#2563eb", "#0a0a0a", "#7c3aed", "#059669", "#dc2626", "#ea580c"];
 
@@ -43,6 +120,10 @@ export default function ParametresPage() {
           </button>
         }
       />
+
+      <div className="mb-6">
+        <AIStatusCard />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
