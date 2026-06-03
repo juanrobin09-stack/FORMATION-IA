@@ -51,43 +51,33 @@ export default function MagiquePage() {
     setSaved(false);
     setError(undefined);
     setStep(0);
-    // Animation de progression pendant les appels
-    const timer = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 700);
     try {
-      // On decoupe en 3 appels separes : chacun dispose de son propre budget
-      // de 60 s (plan Vercel Hobby), ce qui evite le timeout 504 de l'appel unique.
-      const post = (url: string, body: unknown) =>
-        fetch(url, {
+      // Appels SEQUENTIELS (un apres l'autre) : on evite de saturer la limite
+      // de debit Anthropic, et chaque appel reste largement sous les 60 s.
+      const post = async (url: string, body: unknown) => {
+        const r = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-      const [aRes, fRes, eRes] = await Promise.all([
-        post("/api/generate/audit", {
-          entreprise,
-          secteur,
-          activite: objectifs,
-          tachesRepetitives: "",
-          outils: "",
-          difficultes: "",
-          niveauEquipes: niveau,
-          objectifs,
-        }),
-        post("/api/generate/formation", {
-          entreprise,
-          secteur,
-          nbSalaries: null,
-          objectifs,
-          duree: "1 journée (7h)",
-          niveau,
-        }),
-        post("/api/generate/exercices", { entreprise, secteur, niveau }),
-      ]);
-      const [a, f, ex] = await Promise.all([aRes.json(), fRes.json(), eRes.json()]);
-      if (!aRes.ok || !fRes.ok || !eRes.ok) {
-        setError(a?.error || f?.error || ex?.error || "La génération a échoué.");
-        return;
-      }
+        const j = await r.json();
+        if (!r.ok) throw new Error(j?.error || "La génération a échoué.");
+        return j;
+      };
+
+      setStep(1);
+      const a = await post("/api/generate/audit", {
+        entreprise, secteur, activite: objectifs, tachesRepetitives: "",
+        outils: "", difficultes: "", niveauEquipes: niveau, objectifs,
+      });
+      setStep(2);
+      const f = await post("/api/generate/formation", {
+        entreprise, secteur, nbSalaries: null, objectifs,
+        duree: "1 journée (7h)", niveau,
+      });
+      setStep(4);
+      const ex = await post("/api/generate/exercices", { entreprise, secteur, niveau });
+
       setResult({
         audit: a.result,
         formation: f.result,
@@ -109,10 +99,9 @@ export default function MagiquePage() {
         }),
       );
       setStep(STEPS.length);
-    } catch {
-      setError("Impossible de contacter le service de génération. Réessayez.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible de contacter le service de génération. Réessayez.");
     } finally {
-      clearInterval(timer);
       setLoading(false);
     }
   }

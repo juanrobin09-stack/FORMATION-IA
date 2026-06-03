@@ -10,8 +10,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+// Au-dela de cette duree, on abandonne proprement (avant que Vercel ne coupe
+// la fonction a 60 s et ne renvoie un 504 illisible).
+const REQUEST_TIMEOUT_MS = 55_000;
 
 export type AIProvider = "anthropic" | "openai";
 
@@ -51,7 +55,11 @@ export async function generateJSON<T>(
   if (!provider) throw new NoAIKeyError();
 
   if (provider === "anthropic") {
-    const client = new Anthropic({ apiKey: cleanKey(process.env.ANTHROPIC_API_KEY) });
+    const client = new Anthropic({
+      apiKey: cleanKey(process.env.ANTHROPIC_API_KEY),
+      maxRetries: 1,
+      timeout: REQUEST_TIMEOUT_MS,
+    });
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: 4096,
@@ -67,7 +75,11 @@ export async function generateJSON<T>(
   }
 
   // OpenAI
-  const client = new OpenAI({ apiKey: cleanKey(process.env.OPENAI_API_KEY) });
+  const client = new OpenAI({
+    apiKey: cleanKey(process.env.OPENAI_API_KEY),
+    maxRetries: 1,
+    timeout: REQUEST_TIMEOUT_MS,
+  });
   const res = await client.chat.completions.create({
     model: OPENAI_MODEL,
     response_format: { type: "json_object" },
