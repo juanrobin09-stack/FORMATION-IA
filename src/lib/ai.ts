@@ -65,7 +65,7 @@ export async function generateJSON<T>(
     // conforme a la structure attendue (pas de champ manquant -> pas de crash).
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
-      max_tokens: 5000,
+      max_tokens: 8000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [
         {
