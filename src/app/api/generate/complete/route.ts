@@ -12,7 +12,7 @@ import {
 import type { AuditResult, Exercice, FormationResult, Niveau } from "@/lib/types";
 
 export const runtime = "nodejs";
-// 60 s = limite du plan Vercel Hobby. Les 3 generations tournent en parallele.
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 interface Body {
@@ -26,14 +26,15 @@ interface Body {
 
 // FONCTION MAGIQUE : genere audit + formation + exercices en un appel.
 export async function POST(req: Request) {
-  const input = (await req.json()) as Body;
-  if (!input?.entreprise || !input?.secteur) {
-    return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
-  }
-  const niveau: Niveau = input.niveau ?? "Debutant";
-  const duree = input.duree ?? "1 journée (7h)";
-
   try {
+    const input = (await req.json()) as Body;
+    if (!input?.entreprise || !input?.secteur) {
+      return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
+    }
+    const niveau: Niveau = input.niveau ?? "Debutant";
+    const duree = input.duree ?? "1 journée (7h)";
+
+
     const [audit, formation, exercices] = await Promise.all([
       generateJSON<AuditResult>(
         SYSTEM_AUDIT,

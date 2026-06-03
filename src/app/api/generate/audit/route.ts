@@ -5,14 +5,15 @@ import { SYSTEM_AUDIT, promptAudit } from "@/lib/prompts";
 import type { AuditInput, AuditResult } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const input = (await req.json()) as AuditInput;
-  if (!input?.entreprise || !input?.secteur) {
-    return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
-  }
   try {
+    const input = (await req.json()) as AuditInput;
+    if (!input?.entreprise || !input?.secteur) {
+      return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
+    }
     const { data, provider } = await generateJSON<AuditResult>(
       SYSTEM_AUDIT,
       promptAudit({

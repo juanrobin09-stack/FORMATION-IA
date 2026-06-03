@@ -5,14 +5,15 @@ import { SYSTEM_FORMATION, promptFormation } from "@/lib/prompts";
 import type { FormationInput, FormationResult } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const input = (await req.json()) as FormationInput;
-  if (!input?.entreprise || !input?.secteur) {
-    return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
-  }
   try {
+    const input = (await req.json()) as FormationInput;
+    if (!input?.entreprise || !input?.secteur) {
+      return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
+    }
     const { data, provider } = await generateJSON<FormationResult>(
       SYSTEM_FORMATION,
       promptFormation({

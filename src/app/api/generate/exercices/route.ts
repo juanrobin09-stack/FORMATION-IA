@@ -5,6 +5,7 @@ import { SYSTEM_EXERCICES, promptExercices } from "@/lib/prompts";
 import type { Exercice, Niveau } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 interface Body {
@@ -14,11 +15,11 @@ interface Body {
 }
 
 export async function POST(req: Request) {
-  const input = (await req.json()) as Body;
-  if (!input?.entreprise || !input?.secteur) {
-    return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
-  }
   try {
+    const input = (await req.json()) as Body;
+    if (!input?.entreprise || !input?.secteur) {
+      return NextResponse.json({ error: "Entreprise et secteur requis." }, { status: 400 });
+    }
     const { data, provider } = await generateJSON<{ exercices: Exercice[] }>(
       SYSTEM_EXERCICES,
       promptExercices({
