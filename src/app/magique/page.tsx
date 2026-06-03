@@ -91,10 +91,10 @@ export default function MagiquePage() {
       const ex = await post("/api/generate/exercices", { entreprise, secteur, niveau });
 
       setResult({
-        audit: a.result,
-        formation: f.result,
-        exercices: ex.result,
-        provider: f.provider,
+        audit: a.result as AuditResult,
+        formation: f.result as FormationResult,
+        exercices: (ex.result as Exercice[]) ?? [],
+        provider: f.provider ?? "anthropic",
       });
       // Construit le devis associe (numerote, pre-rempli)
       setDevisObj(
