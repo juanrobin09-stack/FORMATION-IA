@@ -60,18 +60,28 @@ export async function generateJSON<T>(
       maxRetries: 1,
       timeout: REQUEST_TIMEOUT_MS,
     });
+    // « Tool use » : l'API garantit un JSON valide (input de l'outil),
+    // ce qui evite toute erreur de parsing si le modele met des guillemets
+    // a l'interieur de ses textes.
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
-      max_tokens: 4096,
-      // Prompt caching sur le system prompt (reutilise entre appels)
+      max_tokens: 8000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+      tools: [
+        {
+          name: "fournir_resultat",
+          description: "Retourne le résultat demandé sous forme structurée.",
+          input_schema: { type: "object", properties: {}, additionalProperties: true },
+        },
+      ],
+      tool_choice: { type: "tool", name: "fournir_resultat" },
       messages: [{ role: "user", content: user }],
     });
-    const text = res.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-    return { data: parseJSON<T>(text), provider };
+    const block = res.content.find(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+    );
+    if (!block) throw new Error("Réponse IA vide (aucun résultat structuré).");
+    return { data: block.input as T, provider };
   }
 
   // OpenAI
