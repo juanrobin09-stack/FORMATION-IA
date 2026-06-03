@@ -29,6 +29,9 @@ export async function POST(req: Request) {
       }),
       AUDIT_SCHEMA,
     );
+    if (!data?.opportunites?.length) {
+      throw new Error("L'IA a renvoyé un audit vide. Réessayez dans un instant.");
+    }
     return NextResponse.json({ result: data, provider });
   } catch (err) {
     return aiError(err);

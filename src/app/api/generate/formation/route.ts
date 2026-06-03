@@ -27,6 +27,9 @@ export async function POST(req: Request) {
       }),
       FORMATION_SCHEMA,
     );
+    if (!data?.modules?.length) {
+      throw new Error("L'IA a renvoyé une formation vide. Réessayez dans un instant.");
+    }
     return NextResponse.json({ result: data, provider });
   } catch (err) {
     return aiError(err);

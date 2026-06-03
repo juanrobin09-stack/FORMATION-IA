@@ -30,7 +30,10 @@ export async function POST(req: Request) {
       }),
       EXERCICES_SCHEMA,
     );
-    return NextResponse.json({ result: data.exercices ?? [], provider });
+    if (!data?.exercices?.length) {
+      throw new Error("L'IA a renvoyé des exercices vides. Réessayez dans un instant.");
+    }
+    return NextResponse.json({ result: data.exercices, provider });
   } catch (err) {
     return aiError(err);
   }
