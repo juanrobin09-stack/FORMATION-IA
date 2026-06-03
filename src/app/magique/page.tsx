@@ -223,16 +223,16 @@ export default function MagiquePage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <ExportCard icon={ClipboardCheck} title="Audit IA"
-              desc={`${result.audit.opportunites.length} opportunites identifiees`}
+              desc={`${result.audit?.opportunites?.length ?? 0} opportunites identifiees`}
               onExport={() => pdfAudit(result.audit, meta())} />
             <ExportCard icon={GraduationCap} title="Support de formation"
-              desc={`${result.formation.modules.length} modules personnalises`}
+              desc={`${result.formation?.modules?.length ?? 0} modules personnalises`}
               onExport={() => pdfFormation(result.formation, meta())} />
             <ExportCard icon={PresentationIcon} title="Diapositives 16:9"
               desc="Support à projeter en session"
               onExport={() => pdfSlides(result.formation, meta())} />
             <ExportCard icon={ListChecks} title="Exercices"
-              desc={`${result.exercices.length} exercices avec corriges`}
+              desc={`${result.exercices?.length ?? 0} exercices avec corriges`}
               onExport={() => pdfExercices(result.exercices, meta())} />
             <ExportCard icon={FileText} title="Devis"
               desc={devisObj ? `${devisObj.numero}` : `${prix} €`}
@@ -247,7 +247,7 @@ export default function MagiquePage() {
             <h2 className="text-lg font-semibold">{result.formation.titre}</h2>
             <p className="mt-1 text-sm text-zinc-600">{result.formation.introduction}</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {result.formation.modules.map((m, i) => (
+              {(result.formation?.modules ?? []).map((m, i) => (
                 <div key={i} className="rounded-lg border border-zinc-100 bg-zinc-50/50 px-4 py-2.5 text-sm">
                   <span className="font-medium">Module {i + 1} :</span> {m.titre}
                 </div>

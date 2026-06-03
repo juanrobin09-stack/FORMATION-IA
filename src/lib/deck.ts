@@ -45,20 +45,22 @@ export function buildDeck(
     secteur: meta.secteur,
   });
 
+  const modules = Array.isArray(formation?.modules) ? formation.modules : [];
+
   slides.push({
     kind: "agenda",
-    items: formation.modules.map((m, i) => `${i + 1}. ${m.titre}`),
+    items: modules.map((m, i) => `${i + 1}. ${m.titre}`),
   });
 
-  formation.modules.forEach((m, i) => {
+  modules.forEach((m, i) => {
     slides.push({
       kind: "section",
       index: i + 1,
-      total: formation.modules.length,
+      total: modules.length,
       title: m.titre,
       objectif: m.objectif,
     });
-    m.slides.forEach((s) => {
+    (m.slides ?? []).forEach((s) => {
       slides.push({
         kind: "content",
         moduleIndex: i + 1,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateJSON } from "@/lib/ai";
 import { aiError } from "@/lib/apiError";
 import { SYSTEM_AUDIT, promptAudit } from "@/lib/prompts";
+import { AUDIT_SCHEMA } from "@/lib/schemas";
 import type { AuditInput, AuditResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
         niveauEquipes: input.niveauEquipes,
         objectifs: input.objectifs,
       }),
+      AUDIT_SCHEMA,
     );
     return NextResponse.json({ result: data, provider });
   } catch (err) {

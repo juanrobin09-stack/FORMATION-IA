@@ -150,10 +150,15 @@ export interface DevisTotaux {
 }
 
 export function calcDevis(d: Devis): DevisTotaux {
-  const totalHT = d.lignes.reduce((s, l) => s + l.quantite * l.prixUnitaireHT, 0);
-  const montantTVA = d.franchiseTVA ? 0 : totalHT * (d.tvaRate / 100);
+  // Defensif : d'anciens devis stockes peuvent ne pas avoir toutes les cles.
+  const lignes = Array.isArray(d?.lignes) ? d.lignes : [];
+  const totalHT = lignes.reduce(
+    (s, l) => s + (Number(l?.quantite) || 0) * (Number(l?.prixUnitaireHT) || 0),
+    0,
+  );
+  const montantTVA = d?.franchiseTVA ? 0 : totalHT * ((Number(d?.tvaRate) || 0) / 100);
   const totalTTC = totalHT + montantTVA;
-  const montantAcompte = totalTTC * ((d.acompte || 0) / 100);
+  const montantAcompte = totalTTC * ((Number(d?.acompte) || 0) / 100);
   return { totalHT, montantTVA, totalTTC, montantAcompte };
 }
 

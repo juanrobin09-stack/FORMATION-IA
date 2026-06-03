@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateJSON } from "@/lib/ai";
 import { aiError } from "@/lib/apiError";
 import { SYSTEM_FORMATION, promptFormation } from "@/lib/prompts";
+import { FORMATION_SCHEMA } from "@/lib/schemas";
 import type { FormationInput, FormationResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
         duree: input.duree,
         niveau: input.niveau,
       }),
+      FORMATION_SCHEMA,
     );
     return NextResponse.json({ result: data, provider });
   } catch (err) {

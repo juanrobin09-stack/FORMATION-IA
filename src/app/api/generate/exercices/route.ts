@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateJSON } from "@/lib/ai";
 import { aiError } from "@/lib/apiError";
 import { SYSTEM_EXERCICES, promptExercices } from "@/lib/prompts";
+import { EXERCICES_SCHEMA } from "@/lib/schemas";
 import type { Exercice, Niveau } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         secteur: input.secteur,
         niveau: input.niveau,
       }),
+      EXERCICES_SCHEMA,
     );
     return NextResponse.json({ result: data.exercices ?? [], provider });
   } catch (err) {

@@ -50,6 +50,7 @@ function cleanKey(raw?: string): string | undefined {
 export async function generateJSON<T>(
   system: string,
   user: string,
+  schema?: Record<string, unknown>,
 ): Promise<{ data: T; provider: AIProvider }> {
   const provider = activeProvider();
   if (!provider) throw new NoAIKeyError();
@@ -60,9 +61,8 @@ export async function generateJSON<T>(
       maxRetries: 1,
       timeout: REQUEST_TIMEOUT_MS,
     });
-    // « Tool use » : l'API garantit un JSON valide (input de l'outil),
-    // ce qui evite toute erreur de parsing si le modele met des guillemets
-    // a l'interieur de ses textes.
+    // « Tool use » avec schema strict : l'API garantit un JSON valide ET
+    // conforme a la structure attendue (pas de champ manquant -> pas de crash).
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
       max_tokens: 5000,
@@ -71,7 +71,11 @@ export async function generateJSON<T>(
         {
           name: "fournir_resultat",
           description: "Retourne le résultat demandé sous forme structurée.",
-          input_schema: { type: "object", properties: {}, additionalProperties: true },
+          input_schema: (schema ?? {
+            type: "object",
+            properties: {},
+            additionalProperties: true,
+          }) as Anthropic.Tool.InputSchema,
         },
       ],
       tool_choice: { type: "tool", name: "fournir_resultat" },
