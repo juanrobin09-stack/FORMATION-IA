@@ -51,20 +51,49 @@ export default function MagiquePage() {
     setSaved(false);
     setError(undefined);
     setStep(0);
-    // Animation de progression pendant l'appel reel
+    // Animation de progression pendant les appels
     const timer = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 700);
     try {
-      const res = await fetch("/api/generate/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entreprise, secteur, objectifs, niveau }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "La génération a échoué.");
+      // On decoupe en 3 appels separes : chacun dispose de son propre budget
+      // de 60 s (plan Vercel Hobby), ce qui evite le timeout 504 de l'appel unique.
+      const post = (url: string, body: unknown) =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      const [aRes, fRes, eRes] = await Promise.all([
+        post("/api/generate/audit", {
+          entreprise,
+          secteur,
+          activite: objectifs,
+          tachesRepetitives: "",
+          outils: "",
+          difficultes: "",
+          niveauEquipes: niveau,
+          objectifs,
+        }),
+        post("/api/generate/formation", {
+          entreprise,
+          secteur,
+          nbSalaries: null,
+          objectifs,
+          duree: "1 journée (7h)",
+          niveau,
+        }),
+        post("/api/generate/exercices", { entreprise, secteur, niveau }),
+      ]);
+      const [a, f, ex] = await Promise.all([aRes.json(), fRes.json(), eRes.json()]);
+      if (!aRes.ok || !fRes.ok || !eRes.ok) {
+        setError(a?.error || f?.error || ex?.error || "La génération a échoué.");
         return;
       }
-      setResult(data);
+      setResult({
+        audit: a.result,
+        formation: f.result,
+        exercices: ex.result,
+        provider: f.provider,
+      });
       // Construit le devis associe (numerote, pre-rempli)
       setDevisObj(
         createDevis(brandingStore.get(), {
