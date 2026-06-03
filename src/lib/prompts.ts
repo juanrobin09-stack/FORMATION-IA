@@ -150,7 +150,7 @@ Réponds en JSON avec exactement cette structure:
   ],
   "conclusion": "string"
 }
-Génère 5 à 7 modules, chacun avec 2 à 3 slides riches. Le français doit être impeccable et accentué.`;
+Génère 4 à 6 modules, chacun avec 2 slides riches. Le français doit être impeccable et accentué.`;
 }
 
 export function promptExercices(input: {

@@ -60,8 +60,20 @@ export default function MagiquePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        const j = await r.json();
-        if (!r.ok) throw new Error(j?.error || "La génération a échoué.");
+        // Le corps n'est pas toujours du JSON (ex. page d'erreur Vercel sur
+        // timeout). On lit en texte puis on tente de parser proprement.
+        const text = await r.text();
+        let j: { error?: string; result?: unknown; provider?: string } = {};
+        try {
+          j = text ? JSON.parse(text) : {};
+        } catch {
+          throw new Error(
+            r.status === 504
+              ? "Délai dépassé (timeout). La génération est trop longue pour le plan actuel — réessaie ou passe en Vercel Pro."
+              : `Erreur ${r.status} : ${text.slice(0, 140)}`,
+          );
+        }
+        if (!r.ok) throw new Error(j?.error || `Erreur ${r.status}`);
         return j;
       };
 

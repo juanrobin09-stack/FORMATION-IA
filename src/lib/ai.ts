@@ -65,7 +65,7 @@ export async function generateJSON<T>(
     // a l'interieur de ses textes.
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,
-      max_tokens: 8000,
+      max_tokens: 5000,
       system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
       tools: [
         {
